@@ -24,7 +24,7 @@ env/
 
 # ML models / large files
 *.pth
-*.pt
+#*.pt
 *.ckpt
 *.h5
 *.keras
