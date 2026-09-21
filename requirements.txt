@@ -1,9 +1,0 @@
-torch>=2.6,<3
-tokenizers>=0.21,<0.24
-transformers>=5.17,<6
-polars>=1,<2
-numpy>=1.26,<3
-scikit-learn>=1.5,<2
-tqdm>=4.66,<5
-huggingface-hub>=0.30,<2
-PySide6-Essentials>=6.8,<7
