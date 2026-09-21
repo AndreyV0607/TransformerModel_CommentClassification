@@ -33,6 +33,6 @@ env/
 data/
 datasets/
 
-.Rhistory
+*.Rhistory
 
-.requirements.txt
+*.requirements.txt
