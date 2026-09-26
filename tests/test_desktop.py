@@ -25,6 +25,8 @@ class DesktopTests(unittest.TestCase):
         self.window = ModerationWindow(device="cpu")
         self.window.show()
         self.app.processEvents()
+        self.assertEqual(self.window.windowTitle(), "BERT Comments Filter")
+        self.assertEqual(self.window.model.config.model_type, "bert")
 
     def tearDown(self):
         if self.window._worker is not None:
@@ -41,8 +43,8 @@ class DesktopTests(unittest.TestCase):
         self.assertIsNone(self.window._worker, "Inference did not finish")
 
     def test_buttons_classify_clear_and_reject_empty(self):
-        for text, decision in (("Thank you for your help!", "Dejar pasar"),
-                               ("You are such an idiot", "Banear comentario")):
+        for text, decision in (("Thank you for your help!", "Do not ban comment"),
+                               ("You are such an idiot", "Ban Comment")):
             self.window.comment.setPlainText(text)
             QTest.mouseClick(self.window.analyze_button, Qt.MouseButton.LeftButton)
             self.assertFalse(self.window.analyze_button.isEnabled())
@@ -57,7 +59,7 @@ class DesktopTests(unittest.TestCase):
         self.assertEqual(self.window.reviewed.toPlainText(), "")
         self.assertTrue(all(b.value() == 0 for b in self.window.probability_bars))
         QTest.mouseClick(self.window.analyze_button, Qt.MouseButton.LeftButton)
-        self.assertIn("Escribe un comentario", self.window.decision.text())
+        self.assertEqual(self.window.decision.text(), "Write a comment to begin.")
         self.assertIsNone(self.window._worker)
 
     def test_worker_failure_restores_controls(self):
@@ -65,7 +67,7 @@ class DesktopTests(unittest.TestCase):
         with patch("src.app.predict_text", side_effect=RuntimeError("Test inference failure")):
             self.window.analyze()
             self.wait_for_result()
-        self.assertIn("No se pudo analizar", self.window.decision.text())
+        self.assertEqual(self.window.decision.text(), "The comment can't be analyzed.")
         self.assertEqual(self.window.status.text(), "Test inference failure")
         self.assertTrue(self.window.analyze_button.isEnabled())
         self.assertFalse(self.window.comment.isReadOnly())

@@ -1,4 +1,4 @@
-"""Ventana de escritorio para clasificar comentarios con el modelo guardado."""
+"""Ventana local para clasificar comentarios con el BERT guardado."""
 
 import argparse
 import sys
@@ -12,9 +12,9 @@ from PySide6.QtWidgets import (
 )
 
 if __package__:
-    from .model import MODEL_DIR, load_model, predict_text
+    from .bert_inference import MODEL_DIR, load_model, predict_text
 else:
-    from model import MODEL_DIR, load_model, predict_text
+    from bert_inference import MODEL_DIR, load_model, predict_text
 
 
 class PredictionThread(QThread):
@@ -43,14 +43,14 @@ class ModerationWindow(QWidget):
         self.model, self.tokenizer, self.device = load_model(model_dir, device)
         self._worker = None
         self._closing = False
-        self.setWindowTitle("Comments Filter")
+        self.setWindowTitle("BERT Comments Filter")
         self.resize(760, 680)
         self.setMinimumSize(540, 560)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 24, 24, 24)
         layout.setSpacing(12)
-        title = QLabel("Comments Filter")
+        title = QLabel("BERT Comments Filter")
         title.setFont(QFont("", 22, QFont.Weight.Bold))
         layout.addWidget(title)
         layout.addWidget(QLabel("Write a comment in english to see if the AI model thinks it's toxic or not."))
@@ -101,7 +101,7 @@ class ModerationWindow(QWidget):
             probabilities_layout.addWidget(bar)
             self.probability_bars.append(bar)
         layout.addWidget(probabilities_box)
-        self.status = QLabel("Local model ready.")
+        self.status = QLabel("Local BERT model ready.")
         self.status.setWordWrap(True)
         self.status.setTextFormat(Qt.TextFormat.PlainText)
         layout.addWidget(self.status)
@@ -121,7 +121,7 @@ class ModerationWindow(QWidget):
         self.comment.clear()
         self._reset_result()
         self.decision.setText("Waiting for a comment")
-        self.status.setText("Local model ready.")
+        self.status.setText("Local BERT model ready.")
         self.comment.setFocus()
 
     def analyze(self):

@@ -1,8 +1,9 @@
 # Transformer Comment Classification
 
-A binary toxic-comment classifier built from scratch with PyTorch. The project
-trains a custom BPE tokenizer, uses a Transformer encoder for classification,
-and includes a local desktop application for testing saved model predictions.
+A binary toxic-comment classification project with two trained Transformer
+pipelines: the original PyTorch encoder and a BERT encoder pretrained with MLM
+and NSP before classification fine-tuning. The local desktop application uses
+the fine-tuned BERT checkpoint by default.
 
 The repository contains the trained model and tokenizer, so the desktop app can
 run without downloading the dataset or training the model again.
@@ -16,7 +17,7 @@ run without downloading the dataset or training the model again.
 - Stratified 80/10/10 train, validation, and test split
 - Class-weighted loss for the imbalanced dataset
 - Automatic CUDA, Apple Silicon MPS, or CPU selection
-- Local PySide6 desktop application
+- Local PySide6 desktop application backed by the fine-tuned BERT model
 - Separate scripts for tokenizer and model training
 - Tests for inference, serialization, training, and the desktop interface
 
@@ -48,7 +49,7 @@ data is split using seed `42` and stratification:
 | Validation | 10% | 15,957 |
 | Test | 10% | 15,958 |
 
-## Model architecture
+## Original Transformer architecture
 
 The classifier uses token and learned positional embeddings followed by a
 Transformer encoder. The first token, `[CLS]`, is used as the sequence
@@ -89,11 +90,35 @@ The test confusion matrix was:
  [  595  1028]]
 ```
 
+## Fine-tuned BERT results
+
+The BERT classifier saved in `model/bert_tuning/toxic_classifier/` uses a
+30,000-token WordPiece vocabulary, 128-token sequences, hidden size `256`, six
+encoder layers, eight attention heads, and a two-class classification head.
+
+| Metric | Result |
+|---|---:|
+| Test loss | 0.2011 |
+| Accuracy | 0.9561 |
+| Non-toxic F1 | 0.9753 |
+| Toxic F1 | 0.8059 |
+| Macro F1 | 0.8906 |
+
+The BERT test confusion matrix was:
+
+```text
+[[13805   530]
+ [  170  1453]]
+```
+
 ## Project structure
 
 ```text
 Transformer_CommentClassification/
 ├── model/
+│   ├── bert_tuning/
+│   │   ├── pretrained/
+│   │   └── toxic_classifier/
 │   ├── toxicity_tokenizer.json
 │   └── toxicity_transformer.pt
 ├── notebooks/
@@ -102,6 +127,7 @@ Transformer_CommentClassification/
 │   └── Model_Training.ipynb
 ├── src/
 │   ├── app.py
+│   ├── bert_inference.py
 │   ├── data.py
 │   ├── model.py
 │   ├── train_model.py
@@ -169,7 +195,8 @@ python src/app.py
 ```
 
 The application opens as a native desktop window. It does not start a web server
-or require a browser. Enter an English comment and select **Check comment**. The
+or require a browser. It loads `model/bert_tuning/toxic_classifier/` entirely
+from local files. Enter an English comment and select **Check comment**. The
 application displays one of these decisions:
 
 - **Ban Comment** for class `1` (toxic)
@@ -182,8 +209,11 @@ Optional arguments:
 
 ```bash
 python src/app.py --device cpu
-python src/app.py --model-dir model/new_training
+python src/app.py --model-dir model/bert_tuning/toxic_classifier
 ```
+
+An alternative `--model-dir` must be a local Hugging Face sequence-classification
+checkpoint with `NON_TOXIC` and `TOXIC` entries in `config.json`.
 
 When `--device auto` is used, the application selects CUDA first, then MPS, and
 finally CPU.
