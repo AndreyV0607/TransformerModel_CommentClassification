@@ -194,31 +194,10 @@ Transformer_CommentClassification/
 └── README.md
 ```
 
-## Environment setup
-
-This workstation uses the following personal Python 3.14 environment:
-
-```text
-/Users/andreyvargassolis/vscode-python314/.venv
-```
-
-Activate it and install the project dependencies:
-
-```bash
-source /Users/andreyvargassolis/vscode-python314/.venv/bin/activate
-cd /Users/andreyvargassolis/Desktop/Data_Science/Transformer_CommentClassification
-python -m pip install -r requirements.txt
-```
-
-The project has been tested with Python `3.14.5`. VS Code is configured locally
-to select this interpreter and activate it in new integrated terminals.
-
-On another computer, activate any compatible Python environment before running
-the installation command.
 
 ## Run the BERT pretraining and fine-tuning notebook
 
-Open `notebooks/bert_tuning.ipynb` with the personal Python 3.14 kernel and run
+Open `notebooks/bert_tuning.ipynb` with Python 3.14 kernel and run
 the cells in order. The notebook provides a complete second training pipeline:
 
 1. Creates the same stratified 80/10/10 data split used by the original model.
@@ -260,98 +239,6 @@ application displays one of these decisions:
 It also displays the probability assigned to each class. Inference runs in a
 worker thread so the window remains responsive while the model is processing.
 
-Optional arguments:
-
-```bash
-python src/app.py --device cpu
-python src/app.py --model-dir model/bert_tuning/toxic_classifier
-```
-
-An alternative `--model-dir` must be a local Hugging Face sequence-classification
-checkpoint with `NON_TOXIC` and `TOXIC` entries in `config.json`.
-
-When `--device auto` is used, the application selects CUDA first, then MPS, and
-finally CPU.
-
-## Train a new tokenizer
-
-The tokenizer must be trained before its corresponding model. Use a new output
-directory to preserve the existing artifacts:
-
-```bash
-python src/train_tokenizer.py --output-dir model/new_training
-```
-
-The script trains a whitespace-pretokenized BPE vocabulary with a minimum token
-frequency of `2`. It adds `[PAD]`, `[UNK]`, `[CLS]`, and `[SEP]`, then configures
-fixed padding and truncation to 128 tokens.
-
-To use a local copy of the Jigsaw CSV:
-
-```bash
-python src/train_tokenizer.py \
-  --data-csv /path/to/train.csv \
-  --output-dir model/new_training
-```
-
-The CSV must contain `id`, `comment_text`, and all six original label columns.
-
-## Train a new model
-
-Use the same data source and output directory used for the tokenizer:
-
-```bash
-python src/train_model.py --output-dir model/new_training
-```
-
-For a local CSV:
-
-```bash
-python src/train_model.py \
-  --data-csv /path/to/train.csv \
-  --output-dir model/new_training
-```
-
-Available training options include:
-
-```bash
-python src/train_model.py \
-  --output-dir model/new_training \
-  --epochs 10 \
-  --batch-size 32 \
-  --device auto
-```
-
-The training script saves:
-
-- `toxicity_transformer.pt`: final model `state_dict`
-- `training_history.json`: loss and accuracy by epoch
-- `test_metrics.json`: test loss, accuracy, classification report, and confusion matrix
-
-Existing model and tokenizer files are protected from accidental overwrites. A
-newly trained model must always remain paired with the tokenizer from the same
-output directory because token IDs can differ between tokenizer runs.
-
-## Run the tests
-
-Run the complete test suite with the personal environment active:
-
-```bash
-python -m unittest discover -s tests -v
-```
-
-The tests verify:
-
-- compatibility with the saved notebook model
-- model and tokenizer save/load behavior
-- tokenizer padding, truncation, and unknown-token handling
-- synthetic end-to-end training
-- desktop classification and clearing behavior
-- empty input and inference error handling
-- safe application shutdown during an active prediction
-
-Synthetic tests write only to temporary directories and do not modify the saved
-model, tokenizer, or notebooks.
 
 ## Notes and limitations
 
