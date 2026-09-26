@@ -1,12 +1,67 @@
 # Transformer Comment Classification
 
-A binary toxic-comment classification project with two trained Transformer
-pipelines: the original PyTorch encoder and a BERT encoder pretrained with MLM
-and NSP before classification fine-tuning. The local desktop application uses
-the fine-tuned BERT checkpoint by default.
+This project explores how a Transformer can support content moderation by
+classifying English comments as **non-toxic** or **toxic**. It contains two
+complete modeling approaches: an original Transformer encoder built with
+PyTorch and a BERT encoder pretrained with Masked Language Modeling (MLM) and
+Next Sentence Prediction (NSP), then fine-tuned for binary classification.
 
-The repository contains the trained model and tokenizer, so the desktop app can
-run without downloading the dataset or training the model again.
+The fine-tuned BERT model is the final model used by the local desktop
+application. Its trained weights and tokenizer are included in the repository,
+so comments can be analyzed locally without downloading the dataset, contacting
+an external API, or training the model again.
+
+## The moderation problem
+
+Imagine a social network where users publish thousands of comments every
+minute. A team of human moderators cannot inspect every message before other
+users see it. Toxic comments may therefore remain visible long enough to harm a
+conversation, target another user, or encourage further abuse.
+
+In this hypothetical scenario, the platform sends each new comment to the BERT
+classifier. The model returns a probability for each class:
+
+- **Non-toxic:** the comment can be published normally.
+- **Toxic:** the platform can hide, censor, reject, or queue the comment for a
+  moderator. Repeated toxic behavior could also contribute to an account-ban
+  decision.
+- **Uncertain:** a production system could send borderline predictions to a
+  human moderator instead of making an automatic decision.
+
+The model supplies the toxicity prediction; the social network defines the
+policy that acts on it. The desktop application in this repository simulates
+that moderation step by accepting a comment, displaying both class
+probabilities, and recommending either **Ban Comment** or **Do not ban
+comment**. It does not connect to a real social network or modify user accounts.
+
+```mermaid
+flowchart LR
+    A[User submits a comment] --> B[WordPiece tokenizer]
+    B --> C[Fine-tuned BERT encoder]
+    C --> D[Non-toxic and toxic probabilities]
+    D --> E{Moderation policy}
+    E -->|Non-toxic| F[Publish comment]
+    E -->|Toxic| G[Hide, censor, or reject]
+    E -->|Borderline| H[Human review]
+    G --> I[Repeated violations may support an account ban]
+```
+
+## How the project addresses it
+
+The project covers the complete machine-learning path from raw moderation data
+to a usable local prediction interface:
+
+1. It prepares and cleans the Jigsaw toxic-comment dataset.
+2. It converts the original six toxicity indicators into one binary target.
+3. It trains tokenizers only on the training split to avoid data leakage.
+4. It compares a custom PyTorch Transformer with a BERT-based approach.
+5. It pretrains BERT with MLM and NSP so the encoder learns language patterns
+   from the comment corpus before seeing the classification objective.
+6. It fine-tunes the pretrained encoder to distinguish toxic from non-toxic
+   comments.
+7. It evaluates the models on a held-out test set.
+8. It loads the saved BERT checkpoint in a native PySide6 desktop application
+   for local moderation experiments.
 
 ## Features
 
